@@ -1,0 +1,115 @@
+#mastodon(2.5.0)にelasticを設定(2018/10/03)
+
+　参考にさせていただいたサイト
+　　「マストドンに日本語対応の全文検索を導入」
+　　　https://kurage.cc/blog-search/
+
+  1.env.production編集
+
+    $vim /home/mastodon/live/.env.production
+
+ 　　# ES_ENABLED=true ←コメント解除
+ 　　# ES_HOST=es　　　←コメント解除のうえ、localhostへ変更
+ 　　# ES_PORT=9200　　←コメント解除
+
+　2．javaの導入　←最初から入ってたので省略
+
+　3．Elasticsearch のインストール
+
+　　 $su -
+
+     #rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+     #vim /etc/yum.repos.d/elasticstack.repo
+
+      [elasticsearch-6.x]
+      name=Elasticsearch repository for 6.x packages
+      baseurl=https://artifacts.elastic.co/packages/6.x/yum
+      gpgcheck=1
+      gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      enabled=1
+      autorefresh=1
+      type=rpm-md
+
+　4．elasticsearch設定変更
+
+     #vim /etc/elasticsearch/elasticsearch.yml
+
+      network.host: localhost ←変更
+
+     #vim /etc/elasticsearch/jvm.options
+
+      -Xms1g  ←お好みで
+      -Xmx1g  ←お好みで
+
+　　  ※多ければ検索が早くなるみたい うちは128mずつ
+
+　5．サービス起動＆常駐(elasticsearch)
+
+     #systemctl start elasticsearch
+
+     #systemctl enable elasticsearch
+
+　6．稼働確認
+
+     #curl localhost:9200
+
+    結果
+
+     {
+      {
+        "name" : "OrdnJGc",
+        "cluster_name" : "elasticsearch",
+        "cluster_uuid" : "mhIbe6p4QXaFFF2mlNynlg",
+        "version" : {
+        "number" : "6.4.2",
+        "build_flavor" : "default",
+        "build_type" : "rpm",
+        "build_hash" : "04711c2",
+        "build_date" : "2018-09-26T13:34:09.098244Z",
+        "build_snapshot" : false,
+        "lucene_version" : "7.4.0",
+        "minimum_wire_compatibility_version" : "5.6.0",
+        "minimum_index_compatibility_version" : "5.0.0"
+      },
+        "tagline" : "You Know, for Search"
+     }
+
+　7．表示される検索結果の件数を増やす
+
+     #vim /home/mastodon/live/app/controllers/api/v1/search_controller.rb
+
+      RESULTS_LIMIT = 100 ←お好みで
+
+　8．検索対象のアカウントを増やす　←お一人様のため省略
+
+　9．日本語対応させる（kuromojiのインストール）
+
+     #/usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-kuromoji
+
+　10．statuses_index.rb(userdic.txt)の編集　←うちの環境ではchewy:deployがエラーになるため、省略
+
+　11．プリコンパイル
+
+      #su - mastodon
+
+      $cd live
+
+      $RAILS_ENV=production bundle exec rake assets:precompile
+
+ 12．インデックス作成及び確認
+
+      $RAILS_ENV=production bundle exec rake chewy:deploy
+
+       ※時間はかなりかかる。今後も定期的に実行が必要
+
+      $curl -XGET localhost:9200/_cat/indices?v
+
+      ※表示されればok
+
+　13．サービス再起動
+
+     $exit
+
+     #systemctl restart elasticsearch mastodon*
+
