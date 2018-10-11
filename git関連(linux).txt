@@ -1,0 +1,25 @@
+#ディレクトリをgit管理下におく
+ git init
+#gitの環境設定
+ git config <対象範囲> <name> <value>
+
+ <対象範囲>
+  --system : システム全体
+             /etc/gitconfig
+
+  --global : 該当ユーザーの全リポジトリ
+             ~/.gitconfig
+
+  --local  : 該当リポジトリ
+　　　　　   repository/.git/config
+
+ <name> <value>
+  https://git-scm.com/docs/git-config.html#_variables
+
+#gitの環境確認
+ git config <対象範囲> --list
+
+#gitの環境設定削除
+ git config <対象範囲> --unset <name>
+
+
