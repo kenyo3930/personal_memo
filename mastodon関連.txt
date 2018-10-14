@@ -113,3 +113,28 @@
 
      #systemctl restart elasticsearch mastodon*
 
+#pgheroのｄｂ統計情報を有効にする(2018/10/14)
+
+　1.su -
+
+  2.postgresql96-contribをインストール　←最初から入っていた
+
+  3.pg_stat_statements の有効化
+
+     #vim /var/lib/pgsql/data/postgres.conf
+
+      #shared_preload_libraries = '' 
+       ↓
+      shared_preload_libraries = 'pg_stat_statements'
+
+      pg_stat_statements.track = all←行追加
+
+  4.#reboot
+
+  5.mastodonDBに管理者権限でログインする
+
+　6.コマンド入力
+
+　　CREATE extension pg_stat_statements;
+
+    SELECT pg_stat_statements_reset();
